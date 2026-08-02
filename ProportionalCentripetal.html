@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centripetal Force Practice</title>
+    
+    <!-- KaTeX CDN for crisp LaTeX formula rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .quiz-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            width: 780px;
+            padding: 28px;
+            box-sizing: border-box;
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+        .score-row {
+            display: flex;
+            justify-content: space-around;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 16px;
+        }
+        .correct { color: #2ecc71; }
+        .incorrect { color: #e74c3c; }
+        
+        .instruction-banner {
+            background-color: #ffe6dc;
+            color: #e65c00;
+            text-align: center;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.05em;
+            font-weight: 500;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        .step-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 18px 16px;
+            position: relative;
+            background-color: #fff;
+            margin-bottom: 16px;
+            transition: opacity 0.3s, border-color 0.3s;
+        }
+        .step-card.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            background-color: #fcfcfc;
+        }
+        .step-title {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .id-badge {
+            font-size: 11px;
+            color: #aaa;
+            font-family: monospace;
+        }
+
+        /* Manipulator Workspace */
+        .equation-workspace {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            user-select: none;
+            margin: 10px 0;
+        }
+        
+        /* Step 1 Radical Wrapper */
+        .radical-wrapper {
+            position: relative;
+            display: inline-flex;
+            padding: 12px 10px 8px 24px;
+            transition: all 0.2s;
+        }
+        .radical-wrapper svg.radical-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: none;
+        }
+        .radical-wrapper.has-sqrt svg.radical-svg {
+            display: block;
+        }
+
+        .side-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 120px;
+        }
+        .center-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .drop-zone {
+            width: 110px;
+            height: 52px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 4px;
+            background-color: #fafafa;
+            box-sizing: border-box;
+        }
+        .drop-zone.drag-over { background-color: #e8f4fc; border-color: #3498db; }
+        
+        .fraction-line-wrapper {
+            height: 15px;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .fraction-line {
+            width: 100%;
+            height: 3px;
+            background-color: #2c3e50;
+            border-radius: 2px;
+            visibility: hidden;
+        }
+        .equals-sign { font-size: 2em; font-weight: bold; color: #2c3e50; }
+
+        .btn-action-sm {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 4px 10px;
+            font-size: 0.75em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-action-sm.active {
+            background-color: #27ae60;
+        }
+
+        .factor-chip {
+            background-color: #3498db;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: grab;
+        }
+        .placeholder-one { font-size: 1.1em; font-weight: bold; color: #bdc3c7; }
+
+        /* Step 2 Refined Radical Styling */
+        .scale-factor-builder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 12px 0;
+            font-size: 1.1em;
+        }
+
+        .step2-radical-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 4px 0px 4px;
+            transition: padding 0.2s;
+        }
+        .step2-radical-wrapper.has-sqrt {
+            padding-left: 22px;
+        }
+
+        .step2-radical-wrapper svg.radical-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 28px;
+            height: 100%;
+            pointer-events: none;
+            display: none;
+        }
+        .step2-radical-wrapper.has-sqrt svg.radical-svg {
+            display: block;
+        }
+        .step2-radical-wrapper.has-sqrt::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 20px;
+            right: 0;
+            height: 2px;
+            background-color: #2c3e50;
+            border-radius: 1px;
+        }
+
+        .scale-input-single {
+            width: 180px;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1em;
+            font-weight: bold;
+            color: #2c3e50;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Step 3 Input */
+        .final-val-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .final-val-row input {
+            width: 280px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1em;
+        }
+        .btn-unit-shortcut {
+            background-color: #34495e;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.9em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-unit-shortcut:hover {
+            background-color: #2c3e50;
+        }
+
+        @keyframes jiggle {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+            100% { transform: translateX(0); }
+        }
+        .jiggle { animation: jiggle 0.4s ease-in-out; background-color: #e74c3c !important; }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-step { background-color: #3498db; color: white; }
+        .btn-step:hover { background-color: #2980b9; }
+        .btn-reset { background-color: #e67e22; color: white; }
+        .btn-reset:hover { background-color: #d35400; }
+        .btn-disabled { background-color: #bdc3c7 !important; cursor: not-allowed; }
+
+        .feedback-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            background-color: transparent;
+        }
+        .dot-correct { background-color: #2ecc71; }
+        .dot-incorrect { background-color: #e74c3c; }
+        .dot-warning { background-color: #f1c40f; box-shadow: 0 0 8px #f1c40f; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-card">
+    <h2>Centripetal Force Practice</h2>
+    
+    <div class="score-row">
+        <span class="correct">Correct: <span id="correct-count">0</span></span>
+        <span class="incorrect">Incorrect: <span id="incorrect-count">0</span></span>
+    </div>
+
+    <!-- Scenario Banner -->
+    <div class="instruction-banner" id="instruction-text">Loading problem...</div>
+
+    <!-- STEP 1: Rearrange Formula -->
+    <div class="step-card" id="card-step1">
+        <div class="step-title">
+            <span>Step 1: Drag terms to isolate target variable</span>
+            <span class="id-badge">ID: <span id="sim-id">---------</span></span>
+        </div>
+        <div class="equation-workspace">
+            <div class="radical-wrapper" id="rad-wrap-L">
+                <svg class="radical-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M 1,68 L 5,68 L 10,95 L 16,4 L 100,4" fill="none" stroke="#2c3e50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="side-container" id="container-L">
+                    <div class="drop-zone" id="zone-L-num" data-side="L" data-pos="num"></div>
+                    <div class="fraction-line-wrapper"><div class="fraction-line" id="line-L"></div></div>
+                    <div class="drop-zone" id="zone-L-den" data-side="L" data-pos="den"></div>
+                </div>
+            </div>
+
+            <div class="center-container">
+                <div class="equals-sign">=</div>
+                <button class="btn-action-sm" onclick="swapSides()">⇄ Swap Sides</button>
+                <button class="btn-action-sm" id="btn-toggle-sqrt" onclick="toggleSqrt()">√ Both Sides</button>
+            </div>
+
+            <div class="radical-wrapper" id="rad-wrap-R">
+                <svg class="radical-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M 1,68 L 5,68 L 10,95 L 16,4 L 100,4" fill="none" stroke="#2c3e50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="side-container" id="container-R">
+                    <div class="drop-zone" id="zone-R-num" data-side="R" data-pos="num"></div>
+                    <div class="fraction-line-wrapper"><div class="fraction-line" id="line-R"></div></div>
+                    <div class="drop-zone" id="zone-R-den" data-side="R" data-pos="den"></div>
+                </div>
+            </div>
+        </div>
+        <div class="button-row">
+            <button class="btn btn-step" id="btn-check-step1" onclick="checkStep1()">1. Check Formula</button>
+        </div>
+    </div>
+
+    <!-- STEP 2: Unevaluated Scale Factor Expression -->
+    <div class="step-card disabled" id="card-step2">
+        <div class="step-title">
+            <span id="step2-title-latex">Step 2: Build scale factor expression</span>
+            <span class="feedback-dot" id="dot-step2"></span>
+        </div>
+        <div class="scale-factor-builder">
+            <span id="target-k-label"></span>
+            <div class="step2-radical-wrapper" id="rad-wrap-step2">
+                <svg class="radical-svg" viewBox="0 0 28 50" preserveAspectRatio="xMinYMid meet">
+                    <path d="M 2,34 L 7,34 L 14,48 L 22,3" fill="none" stroke="#2c3e50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <input type="text" class="scale-input-single" id="k-expr" placeholder="e.g. (3)(2)/4" autocomplete="off" disabled>
+            </div>
+        </div>
+        <div class="button-row">
+            <button class="btn btn-step btn-disabled" id="btn-check-step2" onclick="checkStep2()" disabled>2. Check Scale Factor</button>
+        </div>
+    </div>
+
+    <!-- STEP 3: Final Calculation -->
+    <div class="step-card disabled" id="card-step3">
+        <div class="step-title">
+            <span id="label-step3">Step 3: Solve for the new value</span>
+            <span class="feedback-dot" id="dot-step3"></span>
+        </div>
+        <div class="final-val-row">
+            <input type="text" id="input-final" placeholder="e.g. 79.5 N" autocomplete="off" disabled>
+            <button type="button" class="btn-unit-shortcut" id="btn-acc-unit" onclick="appendAccUnit()" style="display: none;" disabled>+ m/s²</button>
+        </div>
+        <div class="button-row">
+            <button class="btn btn-step btn-disabled" id="btn-check-step3" onclick="checkStep3()" disabled>3. Check Final Answer</button>
+            <button class="btn btn-reset" onclick="generateNewProblem()">Next Scenario</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let correctTotal = 0;
+    let incorrectTotal = 0;
+    let isSqrtActive = false;
+
+    const FACTOR_OPTIONS = [
+        { val: 0.5, label: "is halved" },
+        { val: 0.25, label: "is quartered" },
+        { val: 2, label: "is doubled" },
+        { val: 3, label: "is tripled" },
+        { val: 4, label: "is quadrupled" },
+        { val: 5, label: "is increased by a factor of 5" },
+        { val: 6, label: "is increased by a factor of 6" }
+    ];
+
+    let currentProblem = {
+        targetVar: '',      
+        initialValStr: '',  
+        initialValNum: 0,   
+        initialUnit: '',    
+        k_Fc: null,
+        k_m: null,
+        k_v: null,
+        k_r: null,
+        expectedK: 0,       
+        expectedFinalNum: 0, 
+        expectedFinalStr: '' 
+    };
+
+    let state = {
+        'factor-Fc': 'zone-L-num',
+        'factor-m': 'zone-R-num',
+        'factor-v': 'zone-R-num',
+        'factor-r': 'zone-R-den'
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("sim-id").innerText = generateId();
+        setupDragAndDrop();
+        renderStaticKatex();
+        generateNewProblem();
+    });
+
+    function renderStaticKatex() {
+        katex.render("k", document.getElementById("step2-title-latex"), {
+            displayMode: false,
+            beforeText: "Step 2: Build the unevaluated Scale Factor expression ("
+        });
+        document.getElementById("step2-title-latex").innerHTML = "Step 2: Build the unevaluated Scale Factor expression (" + document.getElementById("step2-title-latex").innerHTML + ")";
+    }
+
+    function generateId() {
+        const now = new Date();
+        const yearDigit = String(now.getFullYear()).slice(-1);
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const randomDigits = String(Math.floor(1000 + Math.random() * 9000));
+        return `${yearDigit}${month}${day}${randomDigits}`;
+    }
+
+    function format3SigFigs(num) {
+        return Number(num).toPrecision(3);
+    }
+
+    function getRandomFactor() {
+        return FACTOR_OPTIONS[Math.floor(Math.random() * FACTOR_OPTIONS.length)];
+    }
+
+    function appendAccUnit() {
+        const input = document.getElementById("input-final");
+        let val = input.value.trim();
+
+        if (!val.includes("m/s²")) {
+            input.value = val ? `${val} m/s²` : "m/s²";
+        }
+        input.focus();
+    }
+
+    function toggleSqrt() {
+        if (document.getElementById("card-step1").classList.contains("disabled")) return;
+        isSqrtActive = !isSqrtActive;
+        const btn = document.getElementById("btn-toggle-sqrt");
+        const radL = document.getElementById("rad-wrap-L");
+        const radR = document.getElementById("rad-wrap-R");
+
+        if (isSqrtActive) {
+            btn.classList.add("active");
+            radL.classList.add("has-sqrt");
+            radR.classList.add("has-sqrt");
+        } else {
+            btn.classList.remove("active");
+            radL.classList.remove("has-sqrt");
+            radR.classList.remove("has-sqrt");
+        }
+        renderWorkspace();
+    }
+
+    function generateNewProblem() {
+        // Reset card states
+        document.getElementById("card-step1").classList.remove("disabled");
+        document.getElementById("card-step2").classList.add("disabled");
+        document.getElementById("card-step3").classList.add("disabled");
+
+        // Reset Step 1 square root toggle
+        isSqrtActive = false;
+        document.getElementById("btn-toggle-sqrt").classList.remove("active");
+        document.getElementById("rad-wrap-L").classList.remove("has-sqrt");
+        document.getElementById("rad-wrap-R").classList.remove("has-sqrt");
+
+        // Hide Step 2 radical initially so we don't spoil Step 1!
+        document.getElementById("rad-wrap-step2").classList.remove("has-sqrt");
+
+        // Set Step 2 label to generic k = (no variable subscript yet!)
+        katex.render(`k =`, document.getElementById("target-k-label"), { displayMode: false });
+
+        // Reset Step 1 button
+        const btn1 = document.getElementById("btn-check-step1");
+        btn1.disabled = false;
+        btn1.className = "btn btn-step";
+        btn1.style.backgroundColor = "";
+        btn1.innerText = "1. Check Formula";
+
+        // Reset Step 2 button & inputs
+        const btn2 = document.getElementById("btn-check-step2");
+        btn2.disabled = true;
+        btn2.className = "btn btn-step btn-disabled";
+        btn2.style.backgroundColor = "";
+        btn2.innerText = "2. Check Scale Factor";
+
+        // Reset Step 3 button & inputs
+        const btn3 = document.getElementById("btn-check-step3");
+        btn3.disabled = true;
+        btn3.className = "btn btn-step btn-disabled";
+        btn3.style.backgroundColor = "";
+        btn3.innerText = "3. Check Final Answer";
+
+        const btnAccUnit = document.getElementById("btn-acc-unit");
+        btnAccUnit.disabled = true;
+
+        ['k-expr', 'input-final'].forEach(id => {
+            let el = document.getElementById(id);
+            el.value = '';
+            el.disabled = true;
+        });
+        document.getElementById("dot-step2").className = "feedback-dot";
+        document.getElementById("dot-step3").className = "feedback-dot";
+
+        // Pick new problem target variable
+        const targets = ['Fc', 'v', 'm', 'r'];
+        currentProblem.targetVar = targets[Math.floor(Math.random() * targets.length)];
+
+        let isValidScenario = false;
+
+        while (!isValidScenario) {
+            currentProblem.k_Fc = getRandomFactor();
+            currentProblem.k_m = getRandomFactor();
+            currentProblem.k_v = getRandomFactor();
+            currentProblem.k_r = getRandomFactor();
+
+            if (currentProblem.targetVar === 'Fc') {
+                currentProblem.expectedK = (currentProblem.k_m.val * Math.pow(currentProblem.k_v.val, 2)) / currentProblem.k_r.val;
+            } else if (currentProblem.targetVar === 'v') {
+                currentProblem.expectedK = Math.sqrt((currentProblem.k_Fc.val * currentProblem.k_r.val) / currentProblem.k_m.val);
+            } else if (currentProblem.targetVar === 'm') {
+                currentProblem.expectedK = (currentProblem.k_Fc.val * currentProblem.k_r.val) / Math.pow(currentProblem.k_v.val, 2);
+            } else if (currentProblem.targetVar === 'r') {
+                currentProblem.expectedK = (currentProblem.k_m.val * Math.pow(currentProblem.k_v.val, 2)) / currentProblem.k_Fc.val;
+            }
+
+            const rawVal = 10 + Math.random() * 89.9;
+            currentProblem.initialValStr = format3SigFigs(rawVal);
+            currentProblem.initialValNum = parseFloat(currentProblem.initialValStr);
+
+            const resultNum = currentProblem.initialValNum * currentProblem.expectedK;
+
+            if (resultNum >= 10.0 && resultNum <= 99.9) {
+                currentProblem.expectedFinalNum = parseFloat(format3SigFigs(resultNum));
+                currentProblem.expectedFinalStr = format3SigFigs(resultNum);
+                isValidScenario = true;
+            }
+        }
+
+        btnAccUnit.style.display = "none";
+
+        if (currentProblem.targetVar === 'Fc') {
+            currentProblem.initialUnit = 'N';
+            document.getElementById("instruction-text").innerHTML = 
+                `An object experiences a centripetal force of <strong>${currentProblem.initialValStr} N</strong>.<br><br>` +
+                `The mass <strong>${currentProblem.k_m.label}</strong>, the velocity <strong>${currentProblem.k_v.label}</strong>, and the radius <strong>${currentProblem.k_r.label}</strong>.<br><br>` +
+                `Find the new <strong>centripetal force (Fc)</strong>.`;
+        } else if (currentProblem.targetVar === 'v') {
+            currentProblem.initialUnit = 'm/s';
+            document.getElementById("instruction-text").innerHTML = 
+                `An object moves with a velocity of <strong>${currentProblem.initialValStr} m/s</strong>.<br><br>` +
+                `The centripetal force <strong>${currentProblem.k_Fc.label}</strong>, the radius <strong>${currentProblem.k_r.label}</strong>, and the mass <strong>${currentProblem.k_m.label}</strong>.<br><br>` +
+                `Find the new <strong>velocity (v)</strong>.`;
+        } else if (currentProblem.targetVar === 'm') {
+            currentProblem.initialUnit = 'kg';
+            document.getElementById("instruction-text").innerHTML = 
+                `A system has an initial mass of <strong>${currentProblem.initialValStr} kg</strong>.<br><br>` +
+                `The centripetal force <strong>${currentProblem.k_Fc.label}</strong>, the radius <strong>${currentProblem.k_r.label}</strong>, and the velocity <strong>${currentProblem.k_v.label}</strong>.<br><br>` +
+                `Find the new <strong>mass (m)</strong>.`;
+        } else {
+            currentProblem.initialUnit = 'm';
+            document.getElementById("instruction-text").innerHTML = 
+                `An object moves in a path with a radius of <strong>${currentProblem.initialValStr} m</strong>.<br><br>` +
+                `The mass <strong>${currentProblem.k_m.label}</strong>, the velocity <strong>${currentProblem.k_v.label}</strong>, and the centripetal force <strong>${currentProblem.k_Fc.label}</strong>.<br><br>` +
+                `Find the new <strong>radius (r)</strong>.`;
+        }
+
+        document.getElementById("k-expr").placeholder = "e.g. (3)(2)/4";
+
+        document.getElementById("label-step3").innerText = `Step 3: Solve for the new value (in ${currentProblem.initialUnit})`;
+        document.getElementById("input-final").placeholder = `e.g. 79.5 ${currentProblem.initialUnit}`;
+
+        // Reset workspace equation layout back to default starting state
+        state = {
+            'factor-Fc': 'zone-L-num',
+            'factor-m': 'zone-R-num',
+            'factor-v': 'zone-R-num',
+            'factor-r': 'zone-R-den'
+        };
+
+        renderWorkspace();
+    }
+
+    function checkStep1() {
+        let targetChipId = `factor-${currentProblem.targetVar}`;
+        if (currentProblem.targetVar === 'v' && !isSqrtActive) {
+            targetChipId = 'factor-v';
+        }
+
+        const targetZone = state[targetChipId];
+        const isNumIsolated = (targetZone === 'zone-L-num' || targetZone === 'zone-R-num');
+        let targetZoneObj = document.getElementById(targetZone);
+        let chipCountInZone = targetZoneObj ? targetZoneObj.querySelectorAll('.factor-chip').length : 0;
+
+        let isCorrect = false;
+
+        if (isNumIsolated && chipCountInZone === 1) {
+            const targetSide = targetZone.split('-')[1];
+            const oppSide = targetSide === 'L' ? 'R' : 'L';
+
+            if (currentProblem.targetVar === 'Fc') {
+                isCorrect = !isSqrtActive && 
+                            (state['factor-m'] === `zone-${oppSide}-num`) && 
+                            (state['factor-v'] === `zone-${oppSide}-num`) && 
+                            (state['factor-r'] === `zone-${oppSide}-den`);
+            } else if (currentProblem.targetVar === 'v') {
+                isCorrect = isSqrtActive && 
+                            (state['factor-Fc'] === `zone-${oppSide}-num`) && 
+                            (state['factor-r'] === `zone-${oppSide}-num`) && 
+                            (state['factor-m'] === `zone-${oppSide}-den`);
+            } else if (currentProblem.targetVar === 'm') {
+                isCorrect = !isSqrtActive && 
+                            (state['factor-Fc'] === `zone-${oppSide}-num`) && 
+                            (state['factor-r'] === `zone-${oppSide}-num`) && 
+                            (state['factor-v'] === `zone-${oppSide}-den`);
+            } else if (currentProblem.targetVar === 'r') {
+                isCorrect = !isSqrtActive && 
+                            (state['factor-m'] === `zone-${oppSide}-num`) && 
+                            (state['factor-v'] === `zone-${oppSide}-num`) && 
+                            (state['factor-Fc'] === `zone-${oppSide}-den`);
+            }
+        }
+
+        const btn1 = document.getElementById("btn-check-step1");
+        if (isCorrect) {
+            btn1.innerText = "✓ Formula Correct!";
+            btn1.style.backgroundColor = "#2ecc71";
+            btn1.disabled = true;
+
+            // NOW reveal target variable subscript!
+            katex.render(`k_{${currentProblem.targetVar}} =`, document.getElementById("target-k-label"), { displayMode: false });
+
+            // NOW reveal radical in Step 2 ONLY if required AFTER Step 1 is correct
+            const kRadWrap = document.getElementById("rad-wrap-step2");
+            if (currentProblem.targetVar === 'v') {
+                kRadWrap.classList.add("has-sqrt");
+                document.getElementById("k-expr").placeholder = "e.g. (3)(2)/4";
+            } else {
+                kRadWrap.classList.remove("has-sqrt");
+                document.getElementById("k-expr").placeholder = "e.g. (3)(2^2)/4";
+            }
+
+            document.getElementById("card-step2").classList.remove("disabled");
+            document.getElementById("k-expr").disabled = false;
+            const btn2 = document.getElementById("btn-check-step2");
+            btn2.disabled = false;
+            btn2.className = "btn btn-step";
+            btn2.innerText = "2. Check Scale Factor";
+        } else {
+            btn1.innerText = "Incorrect - Check placement or √ toggle";
+            btn1.style.backgroundColor = "#e74c3c";
+            setTimeout(() => {
+                btn1.innerText = "1. Check Formula";
+                btn1.style.backgroundColor = "#3498db";
+            }, 1500);
+        }
+    }
+
+    function parseSlashMathExpression(exprStr) {
+        if (!exprStr || exprStr.trim() === '') return NaN;
+
+        let cleaned = exprStr.replace(/[^0-9\/\.\(\)\*\^\s]/g, '');
+
+        cleaned = cleaned
+            .replace(/\)\s*\(/g, ')*(')
+            .replace(/(\d)\s*\(/g, '$1*(')
+            .replace(/\)\s*(\d)/g, ')*$1')
+            .replace(/\^2/g, '**2');
+
+        try {
+            let val = Function(`"use strict"; return (${cleaned})`)();
+            if (currentProblem.targetVar === 'v') {
+                val = Math.sqrt(val);
+            }
+            return val;
+        } catch (e) {
+            return NaN;
+        }
+    }
+
+    function checkStep2() {
+        const rawExpr = document.getElementById("k-expr").value;
+        const userK = parseSlashMathExpression(rawExpr);
+
+        const isCorrect = !isNaN(userK) && Math.abs(userK - currentProblem.expectedK) / currentProblem.expectedK <= 0.01;
+        const dot2 = document.getElementById("dot-step2");
+        const btn2 = document.getElementById("btn-check-step2");
+
+        if (isCorrect) {
+            dot2.className = "feedback-dot dot-correct";
+            btn2.innerText = "✓ Scale Factor Expression Correct!";
+            btn2.style.backgroundColor = "#2ecc71";
+            btn2.disabled = true;
+            document.getElementById("k-expr").disabled = true;
+
+            document.getElementById("card-step3").classList.remove("disabled");
+            document.getElementById("input-final").disabled = false;
+            document.getElementById("btn-acc-unit").disabled = false;
+
+            const btn3 = document.getElementById("btn-check-step3");
+            btn3.disabled = false;
+            btn3.className = "btn btn-step";
+            btn3.innerText = "3. Check Final Answer";
+        } else {
+            dot2.className = "feedback-dot dot-incorrect";
+            btn2.innerText = "Incorrect Factor - Check values & placement";
+            btn2.style.backgroundColor = "#e74c3c";
+            setTimeout(() => {
+                btn2.innerText = "2. Check Scale Factor";
+                btn2.style.backgroundColor = "#3498db";
+            }, 1500);
+        }
+    }
+
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function checkStep3() {
+        const inputFinal = document.getElementById("input-final");
+        const finalStr = inputFinal.value.trim();
+        
+        // Match numbers followed by space and required unit string
+        const exactRegex = new RegExp(`^([\\d\\.]+)\\s+${escapeRegExp(currentProblem.initialUnit)}$`);
+        const match = finalStr.match(exactRegex);
+
+        const matchNumStr = finalStr.match(/^[\d\.]+/);
+        const userNumStr = matchNumStr ? matchNumStr[0] : null;
+        const userFinalNum = parseFloat(userNumStr);
+
+        const isMathValueOk = !isNaN(userFinalNum) && Math.abs(userFinalNum - currentProblem.expectedFinalNum) < 0.05;
+        const isSigFigsOk = userNumStr && (userNumStr === currentProblem.expectedFinalStr);
+        const hasSpace = match !== null;
+
+        const dot3 = document.getElementById("dot-step3");
+        const btn3 = document.getElementById("btn-check-step3");
+
+        // SUCCESS: Correct math, sig figs, space, and unit
+        if (isMathValueOk && isSigFigsOk && hasSpace) {
+            dot3.className = "feedback-dot dot-correct";
+            btn3.innerText = "✓ All Correct!";
+            btn3.style.backgroundColor = "#2ecc71";
+            btn3.disabled = true;
+            inputFinal.disabled = true;
+            document.getElementById("btn-acc-unit").disabled = true;
+
+            correctTotal++;
+            document.getElementById("correct-count").innerText = correctTotal;
+        } 
+        // WARNING: No space between number and unit (e.g., 80.0N)
+        else if (isMathValueOk && isSigFigsOk && !hasSpace && finalStr.includes(currentProblem.initialUnit)) {
+            dot3.className = "feedback-dot dot-warning";
+            btn3.innerText = `Add space between number and unit (e.g. ${currentProblem.expectedFinalStr} ${currentProblem.initialUnit})`;
+            btn3.style.backgroundColor = "#f1c40f";
+        } 
+        // WARNING: Wrong Sig Figs
+        else if (isMathValueOk && !isSigFigsOk) {
+            dot3.className = "feedback-dot dot-warning";
+            btn3.innerText = `Check Sig Figs! (Expected: ${currentProblem.expectedFinalStr} ${currentProblem.initialUnit})`;
+            btn3.style.backgroundColor = "#f1c40f";
+        } 
+        // WARNING: Missing unit entirely
+        else if (isMathValueOk && isSigFigsOk && !finalStr.includes(currentProblem.initialUnit)) {
+            dot3.className = "feedback-dot dot-warning";
+            btn3.innerText = `Include exact unit '${currentProblem.initialUnit}' (e.g. ${currentProblem.expectedFinalStr} ${currentProblem.initialUnit})`;
+            btn3.style.backgroundColor = "#f1c40f";
+        } 
+        // INCORRECT MATH ERROR: Hard failure, increment incorrect counter, reveal expected answer
+        else {
+            dot3.className = "feedback-dot dot-incorrect";
+            btn3.innerText = `Incorrect! Expected: ${currentProblem.expectedFinalStr} ${currentProblem.initialUnit}`;
+            btn3.style.backgroundColor = "#e74c3c";
+
+            incorrectTotal++;
+            document.getElementById("incorrect-count").innerText = incorrectTotal;
+
+            setTimeout(() => {
+                btn3.innerText = "3. Check Final Answer";
+                btn3.style.backgroundColor = "#3498db";
+            }, 3000);
+        }
+    }
+
+    function renderWorkspace() {
+        const zones = ['zone-L-num', 'zone-L-den', 'zone-R-num', 'zone-R-den'];
+        zones.forEach(zId => { document.getElementById(zId).innerHTML = ''; });
+
+        Object.keys(state).forEach(fId => {
+            const zoneId = state[fId];
+            const chip = createFactorChip(fId);
+            document.getElementById(zoneId).appendChild(chip);
+        });
+
+        updateSideUI('L');
+        updateSideUI('R');
+    }
+
+    function createFactorChip(fId) {
+        const div = document.createElement('div');
+        div.className = 'factor-chip';
+        div.id = fId;
+        div.draggable = true;
+        
+        if (fId === 'factor-v') {
+            div.innerText = isSqrtActive ? 'v' : 'v²';
+        } else {
+            div.innerText = fId.replace('factor-', '');
+        }
+
+        div.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', fId); });
+        return div;
+    }
+
+    function updateSideUI(side) {
+        const numZone = document.getElementById(`zone-${side}-num`);
+        const denZone = document.getElementById(`zone-${side}-den`);
+        const line = document.getElementById(`line-${side}`);
+
+        line.style.visibility = (denZone.children.length > 0) ? 'visible' : 'hidden';
+
+        const hasNumFactors = numZone.querySelectorAll('.factor-chip').length > 0;
+        const existingPlaceholder = numZone.querySelector('.placeholder-one');
+
+        if (!hasNumFactors && !existingPlaceholder) {
+            const p1 = document.createElement('span');
+            p1.className = 'placeholder-one';
+            p1.innerText = '1';
+            numZone.appendChild(p1);
+        } else if (hasNumFactors && existingPlaceholder) {
+            existingPlaceholder.remove();
+        }
+    }
+
+    function swapSides() {
+        if (document.getElementById("card-step1").classList.contains("disabled")) return;
+        Object.keys(state).forEach(fId => {
+            const parts = state[fId].split('-');
+            const newSide = (parts[1] === 'L') ? 'R' : 'L';
+            state[fId] = `zone-${newSide}-${parts[2]}`;
+        });
+        renderWorkspace();
+    }
+
+    function setupDragAndDrop() {
+        const zones = document.querySelectorAll('.drop-zone');
+        zones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+            zone.addEventListener('dragleave', () => { zone.classList.remove('drag-over'); });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+
+                const factorId = e.dataTransfer.getData('text/plain');
+                const targetZoneId = zone.id;
+                const sourceZoneId = state[factorId];
+
+                if (isValidDiagonalMove(sourceZoneId, targetZoneId)) {
+                    state[factorId] = targetZoneId;
+                    renderWorkspace();
+                } else {
+                    const chip = document.getElementById(factorId);
+                    if (chip) {
+                        chip.classList.add('jiggle');
+                        setTimeout(() => chip.classList.remove('jiggle'), 400);
+                    }
+                }
+            });
+        });
+    }
+
+    function isValidDiagonalMove(fromZoneId, toZoneId) {
+        if (fromZoneId === toZoneId) return true;
+        const fromSide = fromZoneId.split('-')[1];
+        const fromPos = fromZoneId.split('-')[2];
+        const toSide = toZoneId.split('-')[1];
+        const toPos = toZoneId.split('-')[2];
+        return (fromSide !== toSide && fromPos !== toPos);
+    }
+</script>
+
+</body>
+</html>
